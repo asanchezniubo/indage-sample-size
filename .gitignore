@@ -1,0 +1,10 @@
+.Rhistory
+.RData
+.Rproj.user/
+*_cache/
+*_files/
+.DS_Store
+
+# Internal working notes, not part of the archived record
+INSTRUCCIONS_PUBLICACIO.md
+INSTRUCCIONS_PUBLICACIO.html

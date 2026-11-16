@@ -1,0 +1,52 @@
+R version 4.6.2 (2026-10-29)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 24.04.5 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0 
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0  LAPACK version 3.12.0
+
+Random number generation:
+ RNG:     L'Ecuyer-CMRG 
+ Normal:  Inversion 
+ Sample:  Rejection 
+ 
+locale:
+ [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=ca_ES.UTF-8        LC_COLLATE=ca_ES.UTF-8    
+ [5] LC_MONETARY=ca_ES.UTF-8    LC_MESSAGES=ca_ES.UTF-8   
+ [7] LC_PAPER=ca_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Madrid
+tzcode source: system (glibc)
+
+attached base packages:
+[1] splines   stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+[1] lavaan_0.7-3   mirt_1.48      lattice_0.23-1
+
+loaded via a namespace (and not attached):
+ [1] GPArotation_2026.8-2 future_1.82.0        generics_0.1.4      
+ [4] class_7.3-24         listenv_1.1.0        magrittr_2.0.5      
+ [7] grid_4.6.2           splines2_0.5.4       beepr_2.0.1         
+[10] R.oo_1.27.1          qs2_0.4.0            Matrix_1.7-6        
+[13] R.utils_2.13.0       charport_0.2.0       sessioninfo_1.2.4   
+[16] e1071_1.7-17         brio_1.1.5           gridExtra_2.3.1     
+[19] audio_0.1-12         mgcv_1.9-5           dcurver_0.9.3       
+[22] pbivnorm_0.6.0       permute_0.10-0       pbapply_1.7-5       
+[25] codetools_0.2-20     mnormt_2.1.2         cli_3.6.6           
+[28] rlang_1.3.0          R.methodsS3_1.8.2    parallelly_1.50.0   
+[31] future.apply_1.21.0  otel_0.3.0           vegan_2.7-6         
+[34] tools_4.6.2          parallel_4.6.2       dplyr_1.2.1         
+[37] globals_0.20.0       Deriv_4.3.6          vctrs_0.7.3         
+[40] R6_2.6.1             proxy_0.4-29         lifecycle_1.0.5     
+[43] SimDesign_2.28       MASS_7.3-66          cluster_2.1.8.2     
+[46] pkgconfig_2.0.3      clipr_0.8.1          gtable_0.3.6        
+[49] progressr_1.1.0      RcppParallel_6.2.1   pillar_1.11.1       
+[52] glue_1.8.1           Rcpp_1.1.2           tibble_3.3.1        
+[55] tidyselect_1.2.1     nlme_3.1-172         testthat_3.3.2      
+[58] compiler_4.6.2       quadprog_1.5-8      

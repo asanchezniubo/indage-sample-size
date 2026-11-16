@@ -1,0 +1,32 @@
+{
+  "title": "INDAGE: sample size simulation and pilot precision",
+  "upload_type": "software",
+  "description": "Code, results and report supporting the sample size and sampling allocation of the proposal 'Age-related indicators of functional decline in adults with intellectual disability: development and validation of a healthy ageing scale (INDAGE)' (Spanish State Research Agency, Knowledge Generation Projects 2026). Monte Carlo simulation of four criteria (item parameters, factor structure, measurement invariance and precision of the onset age of decline in adults with and without Down syndrome), the grid over the two stratum sizes from which the design of 700 + 300 participants follows, the comparison of allocations at a fixed size, the precision of the pilot decision rules, and the regional allocation of Table 1.",
+  "creators": [
+    {
+      "name": "Sánchez-Niubó, Albert",
+      "affiliation": "Universitat de Barcelona"
+    },
+    {
+      "name": "Carbó Carreté, Maria",
+      "affiliation": "Universitat de Barcelona"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "intellectual disability",
+    "healthy ageing",
+    "sample size",
+    "Monte Carlo simulation",
+    "item response theory",
+    "Down syndrome"
+  ],
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/asanchezniubo/indage-sample-size",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}

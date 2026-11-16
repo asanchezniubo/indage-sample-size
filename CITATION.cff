@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this material, please cite the archived version."
+title: "INDAGE: sample size simulation and pilot precision"
+type: software
+authors:
+  - family-names: "Sánchez-Niubó"
+    given-names: "Albert"
+    affiliation: "Universitat de Barcelona"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+  - family-names: "Carbó Carreté"
+    given-names: "Maria"
+    affiliation: "Universitat de Barcelona"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+repository-code: "https://github.com/asanchezniubo/indage-sample-size"
+version: "1.0.0"
+date-released: "2026-11-16"
+license: MIT
+keywords: [intellectual disability, healthy ageing, sample size, Monte Carlo simulation, item response theory, Down syndrome]

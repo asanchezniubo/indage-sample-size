@@ -1,0 +1,244 @@
+---
+title: "INDAGE — Sample size justification"
+subtitle: "Monte Carlo simulation, pilot precision and sampling allocation"
+author: "Albert Sánchez-Niubó and Maria Carbó Carreté (Universitat de Barcelona)"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    self_contained: true
+    df_print: kable
+params:
+  rerun: false
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.width = 7, fig.height = 3.8, dpi = 120)
+library(ggplot2)
+# The report is rendered from the repository root: rmarkdown::render("report/indage_sample_size_report.Rmd", knit_root_dir = getwd())
+if (isTRUE(params$rerun)) source("R/run_all.R")
+rd <- function(f) read.csv(file.path("results", f), check.names = FALSE)
+r1 <- rd("01_item_parameters.csv"); r2 <- rd("02_factor_structure.csv")
+r3 <- rd("03_invariance_dif.csv");  r4 <- rd("04_onset_age.csv")
+r5a <- rd("05_allocation_bands.csv"); r5b <- rd("05_allocation_ds.csv")
+r7 <- rd("07_design_grid.csv"); r6 <- rd("06_pilot_precision.csv")
+r6b <- rd("06_pilot_retest.csv")
+f2 <- function(x, d = 2) formatC(x, format = "f", digits = d)
+theme_set(theme_minimal(base_size = 11))
+```
+
+# Purpose
+
+This document supports Section 3.2.3 (*Participants*) and Section 3.2.4 (*Pilot study*) of the proposal *Age-related indicators of functional decline in adults with intellectual disability: development and validation of a healthy ageing scale (INDAGE)*, submitted to the 2026 call for Knowledge Generation Projects of the Spanish State Research Agency. It reports the Monte Carlo simulation used to choose the planned sample of **1,000 adults with intellectual disability (ID)**, of whom a national minimum of **300 with Down syndrome (DS)**, the precision of the pilot decision rules, and the derivation of the sampling allocation.
+
+Every result can be reproduced with the code in `R/` (see the repository README). All planning assumptions are in `R/00_assumptions.R`. The figures shown here are read from `results/`; rendering with `params: rerun: true` reruns the simulation (about 30 minutes on 7 cores).
+
+# Design in brief
+
+- **Population.** Adults aged 35 or over with mild or moderate ID and a certified disability degree of 33% or higher, supported by organisations of Plena Inclusión España and Dincat, in the 17 autonomous communities.
+- **Instrument.** A two-part healthy ageing scale grounded in the WHO framework: five domains of intrinsic capacity and five domains of functional ability, modelled separately, plus an unscored context questionnaire.
+- **Nationwide sample.** 1,000 participants: 700 adults with ID of aetiologies other than Down syndrome and a national minimum of 300 adults with DS (115 aged 35–44, 115 aged 45–54 and 70 aged 55–64). The two strata are modelled separately, so their sizes are set separately. Adults aged 65 or over are 19.6% of the non-DS sample, against 18.9% in the frame; DS are recruited between 35 and 64, because survival makes them scarce above 65.
+- **Pilot.** 150 adults in Catalonia, with moderate ID oversampled to half of the sample, and a retest subsample of 50.
+- **Allocation.** Regional totals proportional to the certified-disability population by autonomous community, with a floor of 15; the age profile keeps the 35–44 reference large and supports the upper boundary (`R/05_allocation.R`).
+- **Key analysis.** For each domain, the *onset age* is the youngest age at which the mean score, modelled with natural splines, falls 0.5 SD below the mean of the 35–44 group of the same stratum (DS or other aetiologies). The reported quantity is its bootstrap interval, the *age range of decline*.
+
+# Planning assumptions
+
+| Block | Assumption | Source / rationale |
+|---|---|---|
+| Items per domain | 5 ordinal items, 4 categories; discriminations 1.0–2.2; thresholds shifted towards "no difficulty" | Expected moderate ceiling in self-reported functional ability |
+| Structure | Intrinsic capacity: 23 indicators, mean communality 0.34, inter-domain correlation .40. Functional ability: 25 items, mean communality 0.50, correlation .50 | Moderate loadings for performance and report indicators; higher for ADL/IADL |
+| Reliability of domain scores | .85 | Planning value |
+| Age trajectories | Other aetiologies: flat to 50, then −0.35 SD per decade. DS: flat to 42, then −0.70 SD per decade (conservative: −0.50) | Consistent with the DS hypothesis (Fortea et al., 2021); planning values, not published estimates for functional ability |
+| Age distribution | Five-year bands of Table 1 (153, 153, 153, 132, 119, 100, 55, 55) | Section 3.2.3 |
+| Acceptance criteria | RMSE ≤ .25 in ≥ 90% of replications; CRMSR ≤ .04; power ≥ .80; 95% half-width of DS onset age ≤ 5 years | Planning conventions |
+
+# Criterion 1 — item parameters
+
+A five-item domain is generated under a graded response model and re-estimated with `mirt` (300 replications per sample size).
+
+```{r c1}
+d1 <- rbind(data.frame(N = r1$N, prop = r1$prop_rmse_discr_le_025, parameter = "Discriminations"),
+            data.frame(N = r1$N, prop = r1$prop_rmse_thr_le_025,   parameter = "Thresholds"))
+ggplot(d1, aes(N, prop, colour = parameter)) + geom_line() + geom_point() +
+  geom_hline(yintercept = .9, linetype = 2) + geom_vline(xintercept = 1000, linetype = 3) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(y = "Replications with RMSE ≤ .25", colour = NULL, title = "Precision of item parameters")
+knitr::kable(transform(r1[, 1:5], rmse_discrimination = f2(rmse_discrimination, 3),
+                       rmse_thresholds = f2(rmse_thresholds, 3), prop_rmse_discr_le_025 = f2(prop_rmse_discr_le_025),
+                       prop_rmse_thr_le_025 = f2(prop_rmse_thr_le_025)), row.names = FALSE,
+             col.names = c("N", "RMSE discr.", "RMSE thresh.", "Prop. discr. ≤ .25", "Prop. thresh. ≤ .25"))
+```
+
+**Reading.** From N = 500 the criterion is met in at least 90% of replications; with 1,000, in 99% (discriminations) and 100% (thresholds).
+
+# Criterion 2 — factor structure
+
+Following the logic of SENECA (Lorenzo-Seva & Ferrando, 2024), ordinal data are generated from a population model of five correlated factors per part, a five-factor EFA is fitted to polychoric correlations, and the CRMSR between the population and sample reproduced common variance is recorded (150 replications per N). SENECA starts from a real initial sample; here the population model is assumed, and the estimate will be recomputed with the first 250 nationwide participants (200 + 2 × number of items, as the procedure requires for ordinal items).
+
+```{r c2}
+ggplot(r2, aes(N, crmsr_median, colour = part)) + geom_line() + geom_point() +
+  geom_hline(yintercept = c(.04, .03), linetype = c(2, 3)) + geom_vline(xintercept = 1000, linetype = 3) +
+  labs(y = "Median CRMSR", colour = "Part", title = "Accuracy of the factor solution",
+       subtitle = "IC = intrinsic capacity, FA = functional ability")
+knitr::kable(transform(r2[, c("part","N","crmsr_median","prop_crmsr_le_04","prop_crmsr_le_03")],
+                       crmsr_median = f2(crmsr_median, 3), prop_crmsr_le_04 = f2(prop_crmsr_le_04), prop_crmsr_le_03 = f2(prop_crmsr_le_03)),
+             row.names = FALSE, col.names = c("Part", "N", "Median CRMSR", "Prop. ≤ .04", "Prop. ≤ .03"))
+```
+
+**Reading.** CRMSR ≤ .04, the threshold the authors suggest for many variables, five factors and low communality, is reached in at least 97% of replications with 1,000 in both parts (median .030).
+
+# Criterion 3 — measurement invariance
+
+Power to detect uniform DIF (threshold shift of 0.5) in one item, with the other four as anchors and a latent mean 0.5 SD lower in the focal group (150 replications; likelihood-ratio test in `mirt::multipleGroup`).
+
+```{r c3}
+t3 <- reshape(r3[, c("comparison","dif_shift","rejection_rate")], idvar = "comparison",
+              timevar = "dif_shift", direction = "wide")
+names(t3) <- c("Comparison", "Type I error (no DIF)", "Power (DIF = 0.5)")
+t3[[2]] <- f2(t3[[2]]); t3[[3]] <- f2(t3[[3]])
+knitr::kable(t3, row.names = FALSE)
+```
+
+**Reading.** Power is at least .87 in the smallest focal group (65 or over, n = 139) and above .90 for adults with DS; type I error stays between .03 and .07.
+
+# Criterion 4 — onset age (binding requirement)
+
+Precision of the onset age in each stratum and power to detect an earlier onset in DS, by the size of the DS sample, with the non-DS sample fixed at 700 (16,000 replications: the half-width is a tail quantile of the estimate distribution, which fewer replications underestimate). Precision is the half-width of the central 95% of the estimates; power uses the Monte Carlo standard error of the difference.
+
+```{r c4, fig.height = 4.2}
+d4 <- rbind(data.frame(k = r4$n_DS, value = r4$halfwidth_DS, scenario = r4$scenario, measure = "95% half-width, DS (years)"),
+            data.frame(k = r4$n_DS, value = r4$power_difference, scenario = r4$scenario, measure = "Power, earlier onset in DS"))
+ref <- data.frame(measure = c("95% half-width, DS (years)", "Power, earlier onset in DS"), y = c(5, .8))
+ggplot(d4, aes(k, value, colour = scenario)) + geom_line() + geom_point() +
+  geom_hline(data = ref, aes(yintercept = y), linetype = 2) +
+  facet_wrap(~measure, scales = "free_y") +
+  labs(x = "Adults with DS in the sample", y = NULL, colour = "Scenario")
+knitr::kable(transform(r4[, c("scenario","n_DS","total","true_DS","halfwidth_DS","halfwidth_non_DS","power_difference")],
+                       halfwidth_DS = f2(halfwidth_DS, 1), halfwidth_non_DS = f2(halfwidth_non_DS, 1),
+                       power_difference = f2(power_difference)),
+             row.names = FALSE, col.names = c("Scenario", "DS", "Total", "True onset DS", "+/- DS", "+/- other", "Power"))
+```
+
+**Reading.** The DS sample is what moves the binding number. With 300 adults with DS the onset age in DS is estimated within about +/-3.5 years and, under the conservative scenario of a slower decline in DS, within +/-5.1 years with power of .83. The criteria set in advance were a half-width of +/-5 years and power above .80, so the adopted design meets the power criterion and lands a tenth of a year above the precision target; 360 adults with DS reach +/-4.7 years and power .85, at the cost of 60 more participants. With 180, the figure under the conservative scenario is above +/-6 years and power stays below .80, so the allocation of the 2025 proposal did not meet its own criterion.
+
+# Choice of the sample size
+
+With the two strata free, the design is a grid over the two sizes. Three cells meet both acceptance criteria under the conservative scenario, and all three require 360 adults with DS. The adopted cell, 700 + 300, holds the total at 1,000 and lands at +/-5.1 years with power .83, so the recruitment of 60 further adults with DS is what the precision target would cost.
+
+```{r c7}
+g <- r7[r7$scenario == "conservative", c("n_non_DS","n_DS","total","halfwidth_DS","halfwidth_non_DS","power_difference","meets_criteria")]
+g <- g[order(g$total), ]
+knitr::kable(transform(g, halfwidth_DS = f2(halfwidth_DS, 1), halfwidth_non_DS = f2(halfwidth_non_DS, 1),
+                       power_difference = f2(power_difference), meets_criteria = ifelse(meets_criteria, "yes", "no")),
+             row.names = FALSE, col.names = c("Non-DS", "DS", "Total", "+/- DS", "+/- other", "Power", "Meets criteria"))
+```
+
+**Reading.** The two columns move independently: the half-width in DS depends only on the DS sample and the half-width in other aetiologies only on the non-DS sample. The whole design therefore follows from one recruitment question, namely how many adults with DS aged 35 to 64 the participating federations can reach.
+
+# Allocation at a fixed size
+
+Neither of the two questions below changes the sample size; both change precision.
+
+**Age bands of the non-DS sample.** Every onset age is defined relative to the mean of the 35-44 group, so the variance of that reference enters every domain, and natural splines are linear beyond the boundary knots, so the upper end needs support.
+
+```{r c5a}
+knitr::kable(transform(r5a[r5a$scenario == "conservative", c("profile","band_65plus","pct_65plus","halfwidth_non_DS")],
+                       halfwidth_non_DS = f2(halfwidth_non_DS, 2)),
+             row.names = FALSE, col.names = c("Profile", "n 65+", "% 65+", "+/- other aetiologies"))
+```
+
+**Reading.** The allocation of the 2025 proposal is the least precise of those compared, and the allocation proportional to the frame is the second least precise, so chasing proportionality by age costs precision. Precision in DS does not depend on this profile, because the DS counts are set by the national minimum.
+
+**Decades of the DS minimum.** At a fixed total of 300.
+
+```{r c5b}
+knitr::kable(transform(r5b[, c("ds_split","scenario","halfwidth_DS","undetected_DS","power_difference")],
+                       halfwidth_DS = f2(halfwidth_DS, 2), undetected_DS = f2(undetected_DS, 3),
+                       power_difference = f2(power_difference)),
+             row.names = FALSE, col.names = c("Split", "Scenario", "+/- DS", "Undetected", "Power"))
+```
+
+**Reading.** Splits that thin the 55-64 decade raise the proportion of replications in which no onset is detected under the conservative scenario, because the curve cannot be followed past the crossing point; splits that thin the 35-44 decade lose the reference. The adopted split is 115/115/70.
+
+# Pilot precision
+
+Each NeuronUP test is completed by half of the pilot sample (planned missing design; Graham et al., 2006), and adults with moderate ID are oversampled to half.
+
+```{r c6}
+knitr::kable(transform(r6[, c("n_pilot","n_per_test","halfwidth_floor15","halfwidth_completion80","r50_lower","halfwidth_floor15_moderate","halfwidth_icc60_informant_moderate")],
+                       halfwidth_floor15 = f2(halfwidth_floor15), halfwidth_completion80 = f2(halfwidth_completion80),
+                       r50_lower = f2(r50_lower), halfwidth_floor15_moderate = f2(halfwidth_floor15_moderate),
+                       halfwidth_icc60_informant_moderate = f2(halfwidth_icc60_informant_moderate)),
+             col.names = c("Pilot n", "n per test", "± floor 15%", "± completion 80%", "Lower 95% limit of r = .50", "± floor 15%, moderate ID", "± ICC .60, informant, moderate ID"))
+knitr::kable(transform(r6b, halfwidth_icc80 = f2(halfwidth_icc80)), col.names = c("Retest n", "± ICC .80 (Bonett, 2002)"))
+```
+
+**Reading.** With 150, each test is evaluated with ±.08 for the proportion at floor and a lower 95% limit above .30 for a correlation of .50 with the CAMCOG-DS; 50 retest participants estimate an ICC of .80 within ±.10. Rules restricted to moderate ID remain imprecise at any feasible pilot size, which is why they act as flags for joint review.
+
+# Sampling allocation (Table 1)
+
+```{r t1}
+t26 <- read.csv("data/table1_2026_proposal.csv", check.names = FALSE)
+t26 <- subset(t26, ccaa != "Total")
+bed <- read.csv("data/bedpd2023_certified_disability_by_ccaa.csv")
+strata <- read.csv("data/bedpd2023_id_age_strata.csv")
+bands <- c("a35_39","a40_44","a45_49","a50_54","a55_59","a60_64","a65_69","a70plus")
+```
+
+Table 1 of the proposal allocates `r sum(t26$total)` participants across the 17 autonomous communities; Ceuta and Melilla are left out for fieldwork logistics. Regional totals are proportional to the certified-disability population of the frame with a floor of 15 per community, and the age profile within each region is the adopted one, rounded by largest remainders.
+
+**Age strata against the frame.** The BEDPD records `r format(sum(strata$n), big.mark = ",")` people aged 35 or over with ID and a degree of 33% or higher. Adults with DS are recruited between 35 and 64 only, so the comparison that matters is with the non-DS sample.
+
+```{r t1age}
+n_tot <- sum(t26$total)
+s65 <- sum(t26$a65_69, t26$a70plus)
+knitr::kable(data.frame(
+  Stratum = strata$stratum, Frame = format(strata$n, big.mark = ","),
+  `Frame %` = f2(100 * strata$n / sum(strata$n), 1),
+  `Whole sample` = c(n_tot - s65, s65, "(within 65+)"),
+  `% of whole sample` = c(f2(100 * (n_tot - s65) / n_tot, 1), f2(100 * s65 / n_tot, 1), ""),
+  `% of non-DS sample` = c(f2(100 * (700 - s65) / 700, 1), f2(100 * s65 / 700, 1), ""),
+  check.names = FALSE))
+```
+
+Adults aged 65 or over are `r f2(100 * s65 / 700, 1)`% of the non-DS sample, against 18.9% in the frame, and `r f2(100 * s65 / n_tot, 1)`% of the whole sample, because the 300 adults with DS are all between 35 and 64. Descriptive estimates referred to the population are corrected with post-stratification weights against the three frame strata, and estimates are reported separately by aetiology, since adults with DS are deliberately over-represented.
+
+**Regional allocation against the frame.** The frame has no breakdown of ID by autonomous community, so the regional reference is the distribution of all people with a certified disability of 33% or higher. The regional proportions carry no inferential weight: autonomous community enters the analyses as a clustering level for standard errors and as a covariate in the DS comparison, not as a weight.
+
+```{r t1reg}
+reg <- merge(data.frame(ccaa = t26$ccaa, table = t26$total), bed, by = "ccaa")
+reg$frame_share <- reg$certified_ge33 / sum(reg$certified_ge33)
+reg$proportional <- round(n_tot * reg$frame_share)
+reg <- reg[order(-reg$table), ]
+knitr::kable(data.frame(Community = reg$ccaa, `Table 1` = reg$table,
+                        `Table 1 %` = f2(100 * reg$table / n_tot, 1),
+                        `Frame %` = f2(100 * reg$frame_share, 1),
+                        `Proportional to frame` = reg$proportional, check.names = FALSE))
+```
+
+The two last columns differ only by the floor of 15 applied to Balears, Navarra and La Rioja and by rounding.
+
+# Limitations
+
+- Precision and power for the onset age use the Monte Carlo distribution of the estimates, equivalent to a well-calibrated standard error; the analysis itself will use bootstrap intervals.
+- Criterion 2 generates data from an assumed population model; the procedure will be repeated with the first 250 nationwide participants.
+- Continuous performance indicators (gait speed, grip strength) are treated as four-category ordinal variables.
+- Cohort and survival effects are not simulated; they are addressed in the analysis plan (Section 3.2.6 of the proposal).
+
+# References
+
+- Bonett, D. G. (2002). Sample size requirements for estimating intraclass correlations with desired precision. *Statistics in Medicine, 21*(9), 1331–1335.
+- Fortea, J., et al. (2021). Alzheimer’s disease associated with Down syndrome: A genetic form of dementia. *The Lancet Neurology, 20*(11), 930–942.
+- Graham, J. W., et al. (2006). Planned missing data designs in psychological research. *Psychological Methods, 11*(4), 323–343.
+- Instituto de Mayores y Servicios Sociales. (2025). *Base Estatal de Datos de Personas con Valoración del Grado de Discapacidad: Informe a 31/12/2023*. IMSERSO.
+- Lorenzo-Seva, U., & Ferrando, P. J. (2024). Determining sample size requirements in EFA solutions: A simple empirical proposal. *Multivariate Behavioral Research, 59*(5), 899–912.
+
+# Session information
+
+```{r session, comment = ""}
+cat(readLines("results/sessionInfo.txt"), sep = "\n")
+```
