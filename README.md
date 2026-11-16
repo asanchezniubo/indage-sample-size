@@ -44,3 +44,4 @@ Seeds are fixed in each script; rerunning reproduces the CSV files in `results/`
 ## License and citation
 
 Code: MIT (see `LICENSE`). Report and data compilation: CC BY 4.0. Please cite the archived version (see `CITATION.cff` and the Zenodo DOI).
+# indage-sample-size
